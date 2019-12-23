@@ -104,17 +104,18 @@ def is_word_in_list(word_to_verify):
             return True
     return False
 
+
 def play_against_machine():
     difficulty = 0
     word = pick_word(difficulty)
     play(word)
 
 
-def print_game_screen(error, word, letter_already_tried):
+def print_game_screen(error, word, letter_already_tried, alphabet):
     print("PENDU: \n")
     show_hangman(error)
     print("\n\n")
-    display_alphabet(letter_already_tried)
+    display_alphabet(letter_already_tried, alphabet)
     print("\n\n")
     show_box_for_letter(word, letter_already_tried)
     print("\n\n")
@@ -127,8 +128,8 @@ def play(word):
     current_guess = ""
     letter_already_tried = []
     error = 0
-    while not word_is_found(letter_already_tried, word):
-        print_game_screen(error, word, letter_already_tried)
+    while not word_is_found(letter_already_tried, word) and error < 10:
+        print_game_screen(error, word, letter_already_tried, alpha)
         while not current_guess.isalpha():
             current_guess = input("Entrer une lettre: \n")
             current_guess = format_word(current_guess)
@@ -154,13 +155,15 @@ def play(word):
                 if error == 10:
                     clear()
                     print("JEU PERDU")
-                    main_menu_display()
+                    print("Réponse: {0}".format(word))
+                    menu(main_menu_display, main_menu_action)
                 if correct_guess(current_guess, word):
                     clear()
                     print("Bien joué!")
         current_guess = ""
     if word_is_found(letter_already_tried, word):
         print("JEU GAGNÉ!\nMot: {0}".format(word))
+        menu(main_menu_display, main_menu_action)
 
 
 def correct_guess(guess, word):
@@ -187,8 +190,7 @@ def get_alphabet():
     return alphabet
 
 
-def display_alphabet(letter_guessed):
-    alphabet = get_alphabet()
+def display_alphabet(letter_guessed, alphabet):
     for letter in alphabet:
         if letter in letter_guessed:
             alphabet.remove(letter)
