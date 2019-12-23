@@ -12,6 +12,32 @@ HANGMAN_9_ERR = ' ------- \n |      |\n |      O\n |    --|--\n |     /\n |\n_|_
 HANGMAN_10_ERR = ' ------- \n |      |\n |      O\n |    --|--\n |     / \\\n |\n_|_'
 
 
+def show_hangman(error):
+    print("\n")
+    if error == 0:
+        print("")
+    if error == 1:
+        print(HANGMAN_1_ERR)
+    if error == 2:
+        print(HANGMAN_2_ERR)
+    if error == 3:
+        print(HANGMAN_3_ERR)
+    if error == 4:
+        print(HANGMAN_4_ERR)
+    if error == 5:
+        print(HANGMAN_5_ERR)
+    if error == 6:
+        print(HANGMAN_6_ERR)
+    if error == 7:
+        print(HANGMAN_7_ERR)
+    if error == 8:
+        print(HANGMAN_8_ERR)
+    if error == 9:
+        print(HANGMAN_9_ERR)
+    if error == 10:
+        print(HANGMAN_10_ERR)
+
+
 def menu_display_template(title, options):
     keep_going = True
     last = len(options)
@@ -40,25 +66,108 @@ def play_menu_display():
 
 def play_menu_action(action_play_menu_action):
     if action_play_menu_action == 3:
+        clear()
         menu(main_menu_display, main_menu_action)
     elif action_play_menu_action == 2:
-        print("playing against human")
+        clear()
+        play_against_human()
     elif action_play_menu_action == 1:
+        clear()
         play_against_machine()
 
 
+def clear():
+    for i in range(0, 100):
+        print("\n")
+
+
+def play_against_human():
+    word_picked = input_word()
+    play(word_picked)
+
+
+def input_word():
+    word_chosen = ""
+    while not is_word_in_list(word_chosen) and len(word_chosen) < 4:
+        word_chosen = format_word(input("Entrer un mot de plus de 4 characters.\n"))
+        if not is_word_in_list(word_chosen):
+            clear()
+            print("Mot inconnu. Veuillez selectionner un mot de la langue française.")
+    return word_chosen
+
+
+def is_word_in_list(word_to_verify):
+    file = open("mots.txt", "r", encoding="ISO-8859-1")
+    lines = file.readlines()
+    for line in lines:
+        if format_word(line[:-1]) == word_to_verify:
+            return True
+    return False
+
 def play_against_machine():
-    # pick a word in file
-    word = ""
-    while len(word) < 4:
-        word = pick_word()
-    # display as many _ as there is letter in the word
-    print("word to guess: {0}".format(word))
+    difficulty = 0
+    word = pick_word(difficulty)
+    play(word)
+
+
+def print_game_screen(error, word, letter_already_tried):
+    print("PENDU: \n")
+    show_hangman(error)
+    print("\n\n")
+    display_alphabet(letter_already_tried)
+    print("\n\n")
+    show_box_for_letter(word, letter_already_tried)
+    print("\n\n")
+    print("ERREUR : {0}/10".format(error))
+
+
+def play(word):
+    clear()
     alpha = get_alphabet()
+    current_guess = ""
     letter_already_tried = []
+    error = 0
     while not word_is_found(letter_already_tried, word):
-        display_alphabet(letter_already_tried)
-        show_box_for_letter(word, letter_already_tried)
+        print_game_screen(error, word, letter_already_tried)
+        while not current_guess.isalpha():
+            current_guess = input("Entrer une lettre: \n")
+            current_guess = format_word(current_guess)
+            if len(current_guess) > 1:
+                clear()
+                print("Vous ne devez rentrer qu'un seul charactère.")
+                break
+            elif current_guess.isalpha() and current_guess not in alpha:
+                clear()
+                print("\n Lettre déjà essayé.")
+                break
+            elif current_guess not in alpha:
+                clear()
+                print("Charactere invalide. Veuillez entrer une lettre alphabetique non utilisé.")
+                break
+            else:
+                alpha.remove(current_guess)
+                letter_already_tried.append(current_guess)
+                if not correct_guess(current_guess, word):
+                    clear()
+                    print("Mauvaise lettre...réeassayez!")
+                    error += 1
+                if error == 10:
+                    clear()
+                    print("JEU PERDU")
+                    main_menu_display()
+                if correct_guess(current_guess, word):
+                    clear()
+                    print("Bien joué!")
+        current_guess = ""
+    if word_is_found(letter_already_tried, word):
+        print("JEU GAGNÉ!\nMot: {0}".format(word))
+
+
+def correct_guess(guess, word):
+    for letter in word:
+        if letter == guess:
+            return True
+    return False
 
 
 def word_is_found(letter_guessed, word_to_find):
@@ -97,12 +206,14 @@ def show_box_for_letter(word_to_guess, guessed_letter):
     print(string_to_show)
 
 
-def pick_word():
-    file = open("mots.txt", "r", encoding="ISO-8859-1")
-    lines = file.readlines()
-    line = lines[random.randrange(1, len(lines))]
-    file.close()
-    line = format_word(line)
+def pick_word(difficulty):
+    line = ""
+    while len(line) < 4:
+        file = open("mots.txt", "r", encoding="ISO-8859-1")
+        lines = file.readlines()
+        line = lines[random.randrange(1, len(lines))]
+        file.close()
+        line = format_word(line)
     return line[0:-1]
 
 
