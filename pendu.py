@@ -87,20 +87,24 @@ def play_against_human():
 
 
 def input_word():
-    word_chosen = ""
-    while not is_word_in_list(word_chosen) and len(word_chosen) < 4:
-        word_chosen = format_word(input("Entrer un mot de plus de 4 characters.\n"))
-        if not is_word_in_list(word_chosen):
+    word_chosen = input("Entrez un mot:\n")
+    while not is_word_in_list(format_word(word_chosen)):
+        word_chosen = input("Mot incorrect.\nEntrez un mot:\n")
+        if not is_word_in_list(format_word(word_chosen)):
             clear()
             print("Mot inconnu. Veuillez selectionner un mot de la langue française.")
-    return word_chosen
+        if len(word_chosen) < 4:
+            clear()
+            print("Entrer un mot d'au moins 4 charactère")
+    return format_word(word_chosen)
 
 
 def is_word_in_list(word_to_verify):
     file = open("mots.txt", "r", encoding="ISO-8859-1")
     lines = file.readlines()
     for line in lines:
-        if format_word(line[:-1]) == word_to_verify:
+        line = format_word(line)
+        if line[0:-1] == word_to_verify:
             return True
     return False
 
