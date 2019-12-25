@@ -1,4 +1,6 @@
 import random
+import time
+import datetime
 
 HANGMAN_1_ERR = '__'
 HANGMAN_2_ERR = '\n |\n |\n |\n |\n |\n_|_'
@@ -54,7 +56,7 @@ def menu_display_template(title, options):
 
 def main_menu_display():
     main_menu_title = "------------------\n|     PENDU      |\n------------------\n"
-    main_menu_options = ["Jouer", "Quitter"]
+    main_menu_options = ["Jouer", "Afficher Aide", "Quitter"]
     return main_menu_title, main_menu_options
 
 
@@ -93,9 +95,6 @@ def input_word():
         if not is_word_in_list(format_word(word_chosen)):
             clear()
             print("Mot inconnu. Veuillez selectionner un mot de la langue française.")
-        if len(word_chosen) < 4:
-            clear()
-            print("Entrer un mot d'au moins 4 charactère")
     return format_word(word_chosen)
 
 
@@ -109,14 +108,35 @@ def is_word_in_list(word_to_verify):
     return False
 
 
+def action_menu_difficulty(action_menu_difficulty_action):
+    if action_menu_difficulty_action == 1:
+        return 5
+    if action_menu_difficulty_action == 2:
+        return 7
+    if action_menu_difficulty_action == 3:
+        return 10
+    if action_menu_difficulty_action == 4:
+        return 100
+
+
+def display_menu_difficulty():
+    display_menu_difficulty_title = "DIFFICULTÉ\nChoisissez un niveau de difficulté"
+    display_menu_difficulty_actions = ["FACILE - 4 lettres ou moins",
+                                       "INTERMEDIAIRE - 4 à 6 lettres",
+                                       "DIFFICILE - 6 à 9",
+                                       "EXPERT - 10+"]
+    return display_menu_difficulty_title, display_menu_difficulty_actions
+
+
 def play_against_machine():
-    difficulty = 0
+    difficulty = menu(display_menu_difficulty, action_menu_difficulty)
     word = pick_word(difficulty)
     play(word)
 
 
 def print_game_screen(error, word, letter_already_tried, alphabet):
     print("PENDU: \n")
+    print_difficulty(word)
     show_hangman(error)
     print("\n\n")
     display_alphabet(letter_already_tried, alphabet)
@@ -126,13 +146,28 @@ def print_game_screen(error, word, letter_already_tried, alphabet):
     print("ERREUR : {0}/10".format(error))
 
 
+def print_difficulty(word):
+    if len(word) < 5:
+        print("FACILE")
+    if 4 < len(word) < 7:
+        print("INTERMEDIAIRE")
+    if 6 < len(word) < 10:
+        print("DIFFICILE")
+    if 9 < len(word) < 100:
+        print("EXPERT")
+
+
 def play(word):
     clear()
+    start = time.time()
+    time_tracker = []
+    total = 0
     alpha = get_alphabet()
     current_guess = ""
     letter_already_tried = []
     error = 0
     while not word_is_found(letter_already_tried, word) and error < 10:
+        time_start_round = time.time()
         print_game_screen(error, word, letter_already_tried, alpha)
         while not current_guess.isalpha():
             current_guess = input("Entrer une lettre: \n")
@@ -165,7 +200,14 @@ def play(word):
                     clear()
                     print("Bien joué!")
         current_guess = ""
+        print("CURRENT TIME: {0}".format(str(datetime.timedelta(seconds=(time.time() - start)))))
+        time_tracker.append(time.time() - time_start_round)
+        total += time.time() - start
+
     if word_is_found(letter_already_tried, word):
+        print("TEMPS TOTAL: {0} MOYENNE PAR LETTRE: {1}".format(str(datetime.timedelta(seconds=total))
+                                                                , str(
+                datetime.timedelta(seconds=sum(time_tracker) / len(time_tracker)))))
         print("JEU GAGNÉ!\nMot: {0}".format(word))
         menu(main_menu_display, main_menu_action)
 
@@ -214,12 +256,13 @@ def show_box_for_letter(word_to_guess, guessed_letter):
 
 def pick_word(difficulty):
     line = ""
-    while len(line) < 4:
+    while len(line) < difficulty:
         file = open("mots.txt", "r", encoding="ISO-8859-1")
         lines = file.readlines()
         line = lines[random.randrange(1, len(lines))]
         file.close()
         line = format_word(line)
+    print(line)
     return line[0:-1]
 
 
@@ -260,17 +303,28 @@ def uppercase(uppercase_word):
 
 
 def main_menu_action(action_main_menu_action):
-    if action_main_menu_action == 2:
+    if action_main_menu_action == 3:
         print("Fermeture du jeu en cours ...")
         exit()
+    if action_main_menu_action == 2:
+        display_help()
+        menu(main_menu_display, main_menu_action)
     elif action_main_menu_action == 1:
         menu(play_menu_display, play_menu_action)
+
+
+def display_help():
+    print("Le jeu du pendu est un jeu de devinette."
+          "Vous avez 10 essaies pour deviner le mot."
+          "Vous pouvez soit demander à votre ami d'entrer un mot, soit demander à l'ordinateur d'en choisir un."
+          "Si vous trouvez le mot en moins de 10 erreurs, vous gagnez."
+          "Vous ne pouvez pas répéter les mêmes lettres.")
 
 
 def menu(display, action):
     title, options = display()
     choice = menu_display_template(title, options)
-    action(choice)
+    return action(choice)
 
 
 if __name__ == '__main__':
