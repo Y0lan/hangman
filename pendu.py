@@ -147,13 +147,13 @@ def print_game_screen(error, word, letter_already_tried, alphabet):
 
 
 def print_difficulty(word):
-    if len(word) < 5:
+    if len(word) <= 4:
         print("FACILE")
-    if 4 < len(word) < 7:
+    if 4 < len(word) <= 6:
         print("INTERMEDIAIRE")
     if 6 < len(word) < 10:
         print("DIFFICILE")
-    if 9 < len(word) < 100:
+    if 10 < len(word) < 100:
         print("EXPERT")
 
 
@@ -166,8 +166,11 @@ def play(word):
     current_guess = ""
     letter_already_tried = []
     error = 0
+    time_start_round = time.time()
     while not word_is_found(letter_already_tried, word) and error < 10:
-        time_start_round = time.time()
+        if correct_guess(current_guess, word):
+            time_start_round = time.time()
+        current_guess = ""
         print_game_screen(error, word, letter_already_tried, alpha)
         while not current_guess.isalpha():
             current_guess = input("Entrer une lettre: \n")
@@ -198,11 +201,11 @@ def play(word):
                     menu(main_menu_display, main_menu_action)
                 if correct_guess(current_guess, word):
                     clear()
+                    print("LETTRE TROUVÉ EN: {0}\n".format(
+                        str(datetime.timedelta(seconds=(time.time() - time_start_round)))))
                     print("Bien joué!")
-        current_guess = ""
-        print("CURRENT TIME: {0}".format(str(datetime.timedelta(seconds=(time.time() - start)))))
         time_tracker.append(time.time() - time_start_round)
-        total += time.time() - start
+        total += time.time() - time_start_round
 
     if word_is_found(letter_already_tried, word):
         print("TEMPS TOTAL: {0} MOYENNE PAR LETTRE: {1}".format(str(datetime.timedelta(seconds=total))
@@ -254,15 +257,26 @@ def show_box_for_letter(word_to_guess, guessed_letter):
     print(string_to_show)
 
 
+def get_range_for_difficulty(difficulty):
+    if difficulty == 5:
+        return 1, 4
+    if difficulty == 7:
+        return 4, 6
+    if difficulty == 10:
+        return 6, 9
+    if difficulty == 100:
+        return 9, 100
+
+
 def pick_word(difficulty):
     line = ""
-    while len(line) < difficulty:
+    lowest, highest = get_range_for_difficulty(difficulty)
+    while not (lowest < len(line[0:-1]) <= highest):
         file = open("mots.txt", "r", encoding="ISO-8859-1")
         lines = file.readlines()
         line = lines[random.randrange(1, len(lines))]
         file.close()
         line = format_word(line)
-    print(line)
     return line[0:-1]
 
 
